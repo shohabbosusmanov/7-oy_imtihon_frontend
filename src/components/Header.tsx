@@ -25,17 +25,19 @@ const Header = () => {
                     <Icon.notificationIcon />
                 </button>
                 <button className="flex gap-3 p-2 items-center bg-white rounded-[14px] hover:bg-[#ebf3ff] cursor-pointer">
-                    <img
-                        className="w-[30px] h-[30px]"
-                        src={
-                            isLoading
-                                ? profileImage
-                                : user.image_url != null
-                                ? `http://localhost:4000${user.image_url}`
-                                : profileImage
-                        }
-                        alt="img"
-                    />
+                    <div className="w-[30px] h-[30px] rounded-full overflow-hidden ">
+                        <img
+                            className="w-[30px] h-[30px]"
+                            src={
+                                isLoading
+                                    ? profileImage
+                                    : user.image_url != null
+                                    ? `http://localhost:4000${user.image_url}`
+                                    : profileImage
+                            }
+                            alt="img"
+                        />
+                    </div>
                     <ProfileDropdown />
                 </button>
             </section>

@@ -27,17 +27,19 @@ const MyProfilePage = () => {
             <div className="flex gap-8">
                 <section className="grow-1 bg-white rounded-3xl p-6 flex flex-col gap-2">
                     <div className="flex justify-between items-start">
-                        <img
-                            className="w-[64px] h-[64px]"
-                            src={
-                                isLoading
-                                    ? profileImg
-                                    : user.image_url != null
-                                    ? `http://localhost:4000${user.image_url}`
-                                    : profileImg
-                            }
-                            alt=""
-                        />
+                        <div className="w-[64px] h-[64px] rounded-full overflow-hidden">
+                            <img
+                                className="w-[64px] h-[64px]"
+                                src={
+                                    isLoading
+                                        ? profileImg
+                                        : user.image_url != null
+                                        ? `http://localhost:4000${user.image_url}`
+                                        : profileImg
+                                }
+                                alt=""
+                            />
+                        </div>
                         <Icon.editIcon />
                     </div>
                     <span className="text-[22px] mt-4 font-[600]">
