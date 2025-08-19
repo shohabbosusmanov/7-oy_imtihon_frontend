@@ -15,3 +15,14 @@
 .btn:hover {
     opacity: 0.7;
 }
+
+.btn2 {
+    width: 90px;
+    height: 48px;
+    border: 1px solid #d8e0f0;
+    font-size: 14px;
+    text-align: center;
+    background-color: white;
+    color: #7d8592;
+    border-radius: 10px;
+}

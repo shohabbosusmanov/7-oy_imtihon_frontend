@@ -1,9 +1,55 @@
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { toast } from "react-toastify";
+
 import Illustration from "../assets/images/Illustration.svg";
 import "../assets/styles/sign-up.css";
+
 import Button from "../components/ui/Button";
 import Icon from "../components/ui/Icon";
 import Input from "../components/ui/Input";
+
+import { api } from "../config/axios";
+
 const SignInPage = () => {
+    const navigate = useNavigate();
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!email || !password) {
+            toast.error("Please fill in all fields");
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { data } = await api.post("auth/login", { email, password });
+
+            if (data.access_token) {
+                toast.success("Successfully signed in!");
+                navigate("/");
+                data;
+            } else {
+                throw new Error("invalid access token ");
+            }
+        } catch (error: any) {
+            console.error("Login error response:", error.response);
+            const message = error.response?.data?.message;
+            toast.error(
+                Array.isArray(message)
+                    ? message.join(", ")
+                    : message || error.message || "Login failed"
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
         <section className="h-screen p-[20px_35px_30px_35px] bg-[#F4F9FD]">
             <div className="flex rounded-[24px] overflow-hidden h-full">
@@ -33,13 +79,17 @@ const SignInPage = () => {
                                 type="email"
                                 label="Email Address"
                                 placeholder="youremail@gmail.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                             />
                             <Input
                                 inputClassName="w-full"
                                 label="Password"
-                                type={"password"}
+                                type="password"
                                 placeholder="••••••••"
                                 eyeIcon={true}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                             />
                             <div className="flex justify-between">
                                 <div className="flex gap-x-2">
@@ -57,15 +107,25 @@ const SignInPage = () => {
                             </div>
                             <div className="flex flex-col items-center gap-y-[20px]">
                                 <Button
+                                    onClick={handleSubmit}
                                     variant="medium"
                                     className="flex items-center gap-x-2"
+                                    disabled={loading}
                                 >
-                                    Sign In
-                                    <Icon.rightArrowIcon />
+                                    {loading ? (
+                                        <div className="loader w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            Sign In <Icon.rightArrowIcon />
+                                        </>
+                                    )}
                                 </Button>
-                                <span className="font-semibold text-[16px] text-[#3F8CFF]">
+                                <Link
+                                    to={"/sign-up"}
+                                    className="font-semibold text-[16px] text-[#3F8CFF]"
+                                >
                                     Don’t have an account?
-                                </span>
+                                </Link>
                             </div>
                         </form>
                     </div>

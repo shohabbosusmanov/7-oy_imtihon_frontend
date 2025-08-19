@@ -1,53 +1,63 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import support from "../assets/images/sidebarImage.svg";
-import { useState } from "react";
 import Icon from "./ui/Icon";
+import { api } from "../config/axios";
+import { useQueryClient } from "@tanstack/react-query";
+
+const logout = async () => {
+    await api.post("/auth/logout");
+};
 
 const Sidebar = () => {
-    const [activeItem, setActiveItem] = useState("dashboard");
+    const location = useLocation();
+    const navigate = useNavigate();
+    const queryClient = useQueryClient();
+
+    const handleLogout = async () => {
+        try {
+            await logout();
+            queryClient.clear();
+            navigate("/sign-in");
+        } catch (error) {
+            console.error("Logout failed", error);
+        }
+    };
 
     const navItems = [
         {
             id: "dashboard",
             label: "Dashboard",
             icon: Icon.dashboard,
-            // path: "/dashboard",
         },
         {
             id: "projects",
             label: "Projects",
             icon: Icon.projects,
-            // path: "/projects",
         },
         {
             id: "calendar",
             label: "Calendar",
             icon: Icon.calendar,
-            // path: "/calendar",
         },
         {
             id: "vacations",
             label: "Vacations",
             icon: Icon.vacations,
-            // path: "/vacations",
         },
         {
             id: "employees",
             label: "Employees",
             icon: Icon.employees,
-            // path: "/employees",
         },
         {
             id: "messenger",
             label: "Messenger",
             icon: Icon.messenger,
-            // path: "/messenger",
         },
         {
             id: "infoPortal",
             label: "Info Portal",
             icon: Icon.infoPortal,
-            // path: "/info-portal",
         },
     ];
 
@@ -59,23 +69,24 @@ const Sidebar = () => {
                 </NavLink>
 
                 <nav className="w-full min-h-[300px] font-semibold text-gray-500 flex flex-col justify-between mb-12">
-                    {navItems.map((item) => (
-                        <NavLink
-                            key={item.id}
-                            to={""}
-                            onClick={() => setActiveItem(item.id)}
-                            className={`flex gap-4 w-full text-left px-2 py-[10px] items-center rounded-[10px]  ${
-                                activeItem === item.id
-                                    ? "bg-[#ebf3ff] text-[#3F8CFF]"
-                                    : "hover:bg-[#ebf3ff] text-[#7D8592]"
-                            }`}
-                        >
-                            {activeItem === item.id
-                                ? item.icon("#3F8CFF")
-                                : item.icon("#7D8592")}
-                            <span>{item.label}</span>
-                        </NavLink>
-                    ))}
+                    {navItems.map((item) => {
+                        const isActive = location.pathname.includes(item.id);
+
+                        return (
+                            <NavLink
+                                key={item.id}
+                                to={`/${item.id}`}
+                                className={`flex gap-4 w-full text-left px-2 py-[10px] items-center rounded-[10px]  ${
+                                    isActive
+                                        ? "bg-[#ebf3ff] text-[#3F8CFF]"
+                                        : "hover:bg-[#ebf3ff] text-[#7d8592]"
+                                }`}
+                            >
+                                {item.icon(isActive ? "#3F8CFF" : "#7D8592")}
+                                <span>{item.label}</span>
+                            </NavLink>
+                        );
+                    })}
                 </nav>
             </section>
 
@@ -97,7 +108,7 @@ const Sidebar = () => {
 
                 <button
                     className="w-full px-2 py-2.5 rounded-lg hover:bg-blue-50 flex gap-2 items-center transition-colors duration-200"
-                    onClick={() => {}}
+                    onClick={handleLogout}
                 >
                     <Icon.logoutIcon />
                     <span>Logout</span>

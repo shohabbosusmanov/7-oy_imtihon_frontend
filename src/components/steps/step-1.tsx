@@ -7,10 +7,28 @@ import OtpInput from "../ui/otp-input";
 import { toast } from "react-toastify";
 import CodeTimer from "../code-timer";
 import type { AxiosError } from "axios";
+import { useAuthStore } from "../../store/authStore";
 
-const Step1 = ({ setNextStep }: { setNextStep: (val: boolean) => void }) => {
+interface Step1Props {
+    setNextStep: (val: boolean) => void;
+    checkUnique: (email: string, phoneNumber: string) => Promise<boolean>;
+}
+
+const Step1 = ({ setNextStep, checkUnique }: Step1Props) => {
     const [canSendOtp, setCanSendOtp] = useState<boolean>(true);
     const [isOtpVerified, setIsOtpVerified] = useState<boolean>(false);
+    const ref = useRef<HTMLInputElement>(null);
+
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [phoneNumber, setPhoneNumber] = useState<string>("");
+
+    const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
+
+    const strongPasswordRegex =
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     const {
         mutateAsync,
@@ -20,20 +38,7 @@ const Step1 = ({ setNextStep }: { setNextStep: (val: boolean) => void }) => {
         isPending,
     } = useSendOtp();
 
-    const ref = useRef<HTMLInputElement>(null);
-
-    const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
-
-    const [emailError, setEmailError] = useState("");
-    const [passwordError, setPasswordError] = useState("");
-
-    const [phoneNumber, setPhoneNumber] = useState<string>("+998950086735");
-
-    const strongPasswordRegex =
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const setStep1 = useAuthStore((state) => state.setStep1);
 
     const validateForm = () => {
         let isValid = true;
@@ -68,15 +73,41 @@ const Step1 = ({ setNextStep }: { setNextStep: (val: boolean) => void }) => {
     };
 
     useEffect(() => {
-        const isFormValid = validateForm();
-        setNextStep(isFormValid);
-    }, [email, password, canSendOtp, isOtpVerified, setNextStep]);
+        const handler = setTimeout(() => {
+            const validateAndCheck = async () => {
+                const isValid = validateForm();
+
+                if (!isValid) {
+                    setNextStep(false);
+                    return;
+                }
+
+                if (email && phoneNumber) {
+                    const isUnique = await checkUnique(email, phoneNumber);
+                    if (!isUnique) {
+                        toast.error("Email or phone number already exits");
+                        setEmail("");
+                        setNextStep(false);
+                        return;
+                    }
+                }
+
+                setNextStep(true);
+                setStep1({ email, password, phoneNumber });
+            };
+
+            validateAndCheck();
+        }, 700);
+
+        return () => clearTimeout(handler);
+    }, [email, password, phoneNumber, isOtpVerified]);
 
     const handleClick = () => {
-        const phoneNumber = ref.current?.value;
+        const phoneValue = ref.current?.value;
+        if (!phoneValue) return;
 
-        setPhoneNumber(phoneNumber as string);
-        mutateAsync(phoneNumber as string);
+        setPhoneNumber(phoneValue);
+        mutateAsync(phoneValue);
     };
 
     useEffect(() => {
@@ -89,10 +120,9 @@ const Step1 = ({ setNextStep }: { setNextStep: (val: boolean) => void }) => {
     useEffect(() => {
         if (isError) {
             const err = error as AxiosError<{ message: string }>;
-            const message = err.response?.data?.message;
-            toast.error(message);
+            toast.error(err.response?.data?.message || "Failed to send OTP");
         }
-    }, [isError, error]);
+    }, [isError]);
 
     return (
         <>
